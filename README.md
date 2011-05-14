@@ -10,4 +10,6 @@ and only buffers 4 bytes.
     
     // or 
     
-    new req.pipe(new parted().on('data', ...etc));
+    req.pipe(new parted().on('data', ...etc));
+    
+If the field was a file, a temporary file path will be returned.
