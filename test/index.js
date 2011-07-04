@@ -46,19 +46,19 @@ var request = function(size) {
 
 var message = function(size, func) {
   var req = request(size);
-  parted(req, function() {
+  parted(req, function(parts) {
     console.log('Buffer size:', size);
-    console.log(req.parts);
+    console.log(parts);
 
-    assert.ok(!!req.parts, 'No parts.');
-    assert.ok(!!req.parts.content, 'No file path.');
-    assert.ok(req.parts.text === 'hello', 
-              'Bad text. Got: ' + req.parts.text);
-    assert.ok(req.parts.hello === 'world...oh look the end'
+    assert.ok(!!parts, 'No parts.');
+    assert.ok(!!parts.content, 'No file path.');
+    assert.ok(parts.text === 'hello', 
+              'Bad text. Got: ' + parts.text);
+    assert.ok(parts.hello === 'world...oh look the end'
               + ' of the part: \r\n------WebKi-just kidding', 
-              'Bad text. Got: ' + req.parts.hello);
+              'Bad text. Got: ' + parts.hello);
 
-    var got = fs.readFileSync(req.parts.content)
+    var got = fs.readFileSync(parts.content)
       , expect = test.slice(233, 495) 
       , i = 0
       , len = expect.length;
