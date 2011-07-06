@@ -46,7 +46,7 @@ var request = function(size) {
 
 var message = function(size, func) {
   var req = request(size);
-  parted(req, function(parts) {
+  parted(req, function(err, parts) {
     console.log('Buffer size:', size);
     console.log(parts);
 
