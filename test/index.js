@@ -44,9 +44,16 @@ var request = function(size) {
   };
 };
 
+var handle = parted.middleware();
+
 var message = function(size, func) {
-  var req = request(size);
-  parted(req, function(err, parts) {
+  var req = request(size)
+    , res = {};
+  handle(req, res, function(err) {
+    if (err) return console.error(err);
+
+    var parts = req.body;
+
     console.log('Buffer size:', size);
     console.log(parts);
 

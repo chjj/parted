@@ -1,20 +1,31 @@
-# a streaming multipart parser
+# parted
 
-Just wanted to get this up. It's still yet to be optimized. It's streaming 
-and only buffers 3 bytes.
+Parted is a streaming multipart parser.
+
+## Usage
 
 ``` js
 var parted = require('parted');
 
-parted(req, function(parts) {
+var parser = new parted(type, opt)
+  , parts = {};
+
+parser.on('error', function(err) {
+  req.destroy();
+  next(err);
+});
+parser.on('data', function(part) {
+  parts[part.field] = part.file || part.text;
+});
+parser.on('end', function() {
   console.log(parts);
 });
+
+req.pipe(parser);
 ```
 
-or
+### As a middleware
 
+``` js
+app.use(parted.middleware());
 ```
-req.pipe(new parted().on('data', ...etc));
-```
-
-If the field was a file, a temporary file path will be returned.
