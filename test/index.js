@@ -38,6 +38,7 @@ var request = function(size) {
       return this;
     },
     destroy: function() {
+      throw new Error('BAD');
       stream.destroy();
       return this;
     }
