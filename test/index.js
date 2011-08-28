@@ -38,7 +38,6 @@ var request = function(size) {
       return this;
     },
     destroy: function() {
-      throw new Error('BAD');
       stream.destroy();
       return this;
     }
@@ -50,8 +49,9 @@ var handle = parted.middleware();
 var message = function(size, func) {
   var req = request(size)
     , res = {};
+
   handle(req, res, function(err) {
-    if (err) return console.error(err);
+    if (err) throw err;
 
     var parts = req.body;
 
