@@ -4,17 +4,22 @@ var parted = require('../')
   , path = require('path');
 
 var test = fs.readFileSync(__dirname + '/test.txt');
-var boundary = test.toString('utf8')
-                   .match(/^--[^\r\n]+/)[0].slice(2);
+
+var boundary = test
+  .toString('utf8')
+  .match(/^--[^\r\n]+/)[0]
+  .slice(2);
 
 var files = path.normalize(__dirname + '/tmp');
-if (!path.existsSync(files)) {
-  fs.mkdirSync(files, 0666);
-} else {
+
+try {
   fs.readdirSync(files).forEach(function(f) {
     fs.unlink(files + '/' + f);
   });
+} catch(e) {
+  fs.mkdirSync(files);
 }
+
 parted.root = files;
 
 // create a mock request
@@ -49,8 +54,9 @@ var handle = parted.middleware();
 var message = function(size, func) {
   var req = request(size)
     , res = {};
+
   handle(req, res, function(err) {
-    if (err) return console.error(err);
+    if (err) throw err;
 
     var parts = req.body;
 
