@@ -3,14 +3,8 @@ var parted = require('../')
   , fs = require('fs')
   , path = require('path');
 
-var test = fs.readFileSync(__dirname + '/test.txt');
-
-var boundary = test
-  .toString('utf8')
-  .match(/^--[^\r\n]+/)[0]
-  .slice(2);
-
-var files = path.normalize(__dirname + '/tmp');
+var files = path.normalize(__dirname + '/tmp')
+  , image = fs.readFileSync(__dirname + '/top.png');
 
 try {
   fs.readdirSync(files).forEach(function(f) {
@@ -23,10 +17,16 @@ try {
 parted.root = files;
 
 // create a mock request
-var request = function(size) {
-  var stream = fs.createReadStream(__dirname + '/test.txt', { 
+var request = function(size, file) {
+  file = __dirname + '/' + file + '.part';
+  var stream = fs.createReadStream(file, { 
     bufferSize: size 
   });
+  var boundary = fs
+    .readFileSync(file)
+    .toString('utf8')
+    .match(/--[^\r\n]+/)[0]
+    .slice(2);
   return {
     headers: {
       'content-type': 'multipart/form-data; boundary="' + boundary + '"'
@@ -51,8 +51,8 @@ var request = function(size) {
 
 var handle = parted.middleware();
 
-var message = function(size, func) {
-  var req = request(size)
+var message = function(size, file, func) {
+  var req = request(size, file)
     , res = {};
 
   handle(req, res, function(err) {
@@ -72,7 +72,7 @@ var message = function(size, func) {
               'Bad text. Got: ' + parts.hello);
 
     var got = fs.readFileSync(parts.content)
-      , expect = test.slice(233, 495) 
+      , expect = image
       , i = 0
       , len = expect.length;
 
@@ -92,19 +92,26 @@ var message = function(size, func) {
   });
 };
 
-var multiple = function() {
+var multiple = function(file, func) {
   var times = 100;
 
   (function next(i) {
     if (!i) return done();
-    message(i, function() {
+    message(i, file, function() {
       next(--i);
     });
   })(times);
 
   function done() {
-    console.log('Completed, no errors.');
+    console.log('Completed %s, no errors.', file);
+    if (func) func();
   }
 };
 
-multiple();
+multiple('chrome', function() {
+  multiple('firefox', function() {
+    multiple('opera', function() {
+      console.log('DONE');
+    });
+  });
+});

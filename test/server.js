@@ -10,9 +10,9 @@ require('http').createServer(function(req, res) {
       '<title>multi</title>',
       '<style>form > * { display: block; }</style>',
       '<form action="/" method="POST" enctype="multipart/form-data">',
-      '  <input type="text" name="text">',
+      '  <input type="text" name="text" value="hello">',
       '  <input type="file" name="content">',
-      '  <textarea name="moretext"></textarea>',
+      '  <textarea name="hello">oh look the end of the part:\r\n--</textarea>',
       '  <input type="submit" value="go">',
       '</form>'
     ].join('\n'));
