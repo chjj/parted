@@ -51,12 +51,22 @@ var request = function(size, file) {
 
 var handle = parted.middleware();
 
+var expect_text = {
+  chrome: 'world...oh look the end'
+              + ' of the part: \r\n------WebKi-just kidding',
+  opera: 'oh look the end of the part:\r\n--',
+  firefox: 'oh look the end of the part:\r\n--'
+};
+
 var message = function(size, file, func) {
   var req = request(size, file)
     , res = {};
 
   handle(req, res, function(err) {
-    if (err) throw err;
+    if (err) {
+      console.log(req.body);
+      throw err;
+    }
 
     var parts = req.body;
 
@@ -67,8 +77,7 @@ var message = function(size, file, func) {
     assert.ok(!!parts.content, 'No file path.');
     assert.ok(parts.text === 'hello', 
               'Bad text. Got: ' + parts.text);
-    assert.ok(parts.hello === 'world...oh look the end'
-              + ' of the part: \r\n------WebKi-just kidding', 
+    assert.ok(parts.hello === expect_text[file], 
               'Bad text. Got: ' + parts.hello);
 
     var got = fs.readFileSync(parts.content)
@@ -109,8 +118,8 @@ var multiple = function(file, func) {
 };
 
 multiple('chrome', function() {
-  multiple('firefox', function() {
-    multiple('opera', function() {
+  multiple('opera', function() {
+    multiple('firefox', function() {
       console.log('DONE');
     });
   });
