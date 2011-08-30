@@ -15,8 +15,13 @@ parser.on('error', function(err) {
   next(err);
 });
 
-parser.on('data', function(part) {
-  parts[part.field] = part.file || part.text;
+parser.on('part', function(field, part) {
+  // temporary path or string
+  parts[field] = part; 
+});
+
+parser.on('data', function(bytes) {
+  console.log('%d bytes written.', this.written);
 });
 
 parser.on('end', function() {
