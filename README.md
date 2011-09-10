@@ -1,6 +1,9 @@
 # parted
 
-Parted is a streaming multipart parser.
+Parted is a streaming multipart parser. It eventually intends to be a completely 
+streaming request body parser for URL encoded messages, JSON, along with 
+multipart. The QS and JSON parsers are currently included, but they're somewhat
+experimental.
 
 ## Usage
 
