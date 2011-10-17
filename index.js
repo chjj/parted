@@ -1,1 +1,1 @@
-module.exports = require('./lib/parted');
+module.exports = require('./lib/index');
