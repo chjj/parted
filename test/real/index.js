@@ -12,7 +12,7 @@ var app = express.createServer();
 
 var handle = parted({ path: __dirname + '/' });
 
-app.use('/json', function(req, res, next) {
+/*app.use('/json', function(req, res, next) {
   handle(req, res, function(err) {
     if (err) return next(err);
     var data = req.body.json.split('');
@@ -26,7 +26,7 @@ app.use('/json', function(req, res, next) {
     });
     next();
   });
-});
+});*/
 
 app.use(handle);
 
@@ -34,14 +34,15 @@ app.use(function(req, res, next) {
   if (req.method === 'POST') return next();
   res.end([
     '<!doctype html>',
-    '<style>body * { display: block; }</style>',
+    '<style>form * { display: block; }</style>',
     '<h1>multipart</h1>',
     '<form action="/" method="POST" enctype="multipart/form-data">',
     '  <input type="file" name="file">',
     '  <input type="submit" name="multipart">',
     '</form>',
     '<h1>form-urlencoded</h1>',
-    '<form action="/" method="POST" enctype="application/x-www-form-urlencoded">',
+    '<form action="/" method="POST"',
+    '  enctype="application/x-www-form-urlencoded">',
     '  <input type="text" name="one">',
     '  <input type="submit" name="two">',
     '</form>',
@@ -49,8 +50,13 @@ app.use(function(req, res, next) {
     '<form action="/json" method="POST" ',
     '  enctype="application/x-www-form-urlencoded">',
     '  <textarea name="json">{}</textarea>',
-    '  <input type="submit">',
+    '  <input type="button" value="send" id="json">',
     '</form>',
+    '<pre id="out"></pre>',
+    '<script>',
+    '' + send + '',
+    'document.getElementById("json").onclick = send;',
+    '</script>'
   ].join('\n'));
 });
 
@@ -67,3 +73,20 @@ app.use(function(req, res, next) {
 });
 
 app.listen(8080);
+
+function send() {
+  var textarea = document.getElementsByTagName('textarea')[0];
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', 'http://127.0.0.1:8080/', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4
+        && xhr.status === 200) {
+      document.getElementById('out').textContent = xhr.responseText;
+    }
+  };
+
+  xhr.send(textarea.value);
+}
