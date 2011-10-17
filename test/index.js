@@ -11,7 +11,7 @@ try {
     fs.unlink(files + '/' + f);
   });
 } catch(e) {
-  fs.mkdirSync(files);
+  fs.mkdirSync(files, 0755);
 }
 
 parted.root = files;
