@@ -123,6 +123,7 @@ var main = function(argv) {
       multiple('opera', function() {
         multiple('firefox', function() {
           console.log('DONE');
+          if (!argv.length) json(), encoded();
         });
       });
     });
@@ -142,7 +143,7 @@ var json = function() {
   var TEST_JSON = '{"a":{"b":100,"c":[2,3]},"d":["e"],"f":true}';
   var Parser = require('../lib/json');
 
-  var parser = Parser.create();
+  var parser = new Parser();
 
   parser.on('end', function(obj) {
     console.log(obj);
