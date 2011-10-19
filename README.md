@@ -18,14 +18,19 @@ $ npm install parted
 
 ## As a middleware
 
+(__NOTE:__ Limit options have been slightly changed for v0.0.6. Refer to the
+example below.)
+
 ``` js
 var parted = require('parted');
 
 app.use(parted({
-  path: __dirname + '/uploads', // custom file path
-  encodedLimit: 30 * 1024,
-  jsonLimit: 30 * 1024,
-  mutlipartLimit: 30 * 1024 * 1024
+  // custom file path
+  path: __dirname + '/uploads',
+  // memory usage limit per request
+  limit: 30 * 1024,
+  // disk usage limit per request
+  diskLimit: 30 * 1024 * 1024
 }));
 ```
 
@@ -34,9 +39,14 @@ app.use(parted({
 ### The multipart parser alone
 
 ``` js
-var parted = require('parted');
+var multipart = require('parted').multipart;
 
-var parser = new parted.multipart(type, options)
+var options = {
+  limit: 30 * 1024,
+  diskLimit: 30 * 1024 * 1024
+};
+
+var parser = new multipart(type, options)
   , parts = {};
 
 parser.on('error', function(err) {
@@ -49,7 +59,7 @@ parser.on('part', function(field, part) {
   parts[field] = part;
 });
 
-parser.on('data', function(bytes) {
+parser.on('data', function() {
   console.log('%d bytes written.', this.written);
 });
 
