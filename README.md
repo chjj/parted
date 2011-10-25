@@ -69,3 +69,8 @@ parser.on('end', function() {
 
 req.pipe(parser);
 ```
+
+## Running tests
+
+  $ node test
+
