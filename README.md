@@ -30,8 +30,29 @@ app.use(parted({
   // memory usage limit per request
   limit: 30 * 1024,
   // disk usage limit per request
-  diskLimit: 30 * 1024 * 1024
+  diskLimit: 30 * 1024 * 1024,
+  // allow multiple parts of the same name,
+  // then available as an array
+  multiple: true
 }));
+```
+
+When `multiple` is disabled only a single part will be present
+for a given name, for example:
+
+```js
+{ image: '/tmp/bigred.1319577761529.png' }
+```
+
+However when `multiple` is enabled, this _may_ be an array:
+
+```js
+{ images: 
+   [ '/tmp/bigred-pau.1319577761529.png',
+     '/tmp/bigred-ico.1319577761528.png',
+     '/tmp/bigred-rec.1319577761529.png',
+     '/tmp/bigred-sto.1319577761529.png',
+     '/tmp/bigred.1319577761529.png' ] }
 ```
 
 ## Usage
