@@ -30,6 +30,8 @@ var handle = parted({ path: __dirname + '/' });
 
 app.use(handle);
 
+app.use(express.static(__dirname));
+
 app.use(function(req, res, next) {
   if (req.method === 'POST') return next();
   res.end([
@@ -37,6 +39,7 @@ app.use(function(req, res, next) {
     '<style>form * { display: block; }</style>',
     '<h1>multipart</h1>',
     '<form action="/" method="POST" enctype="multipart/form-data">',
+    '  <input type="text" name="text">',
     '  <input type="file" name="file">',
     '  <input type="submit" name="multipart">',
     '</form>',
@@ -64,8 +67,14 @@ app.use(function(req, res, next) {
   if (req.body && req.body.multipart) {
     var file = req.body.file;
     var ext = path.extname(file);
-    res.contentType(ext);
-    fs.createReadStream(file).pipe(res);
+    //res.contentType(ext);
+    //fs.createReadStream(file).pipe(res);
+    res.contentType('html');
+    res.end([
+      '<!doctype html>',
+      '<p>' + req.body.text + '</p>',
+      '<p><img src="' + req.body.file.split('/').pop() + '"></p>'
+    ].join('\n'));
   } else {
     res.contentType('.txt');
     res.end(util.inspect(req.body));

@@ -2,7 +2,7 @@
   "name": "parted",
   "description": "A streaming body parser",
   "author": "Christopher Jeffrey",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "main": "./index.js",
   "repository": "git://github.com/chjj/parted.git",
   "keywords": [ "multipart", "parser", "http", "express", "middleware" ]
