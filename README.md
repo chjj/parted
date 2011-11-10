@@ -10,6 +10,11 @@ The middleware will leave you with a `req.body` object, similar to the default
 body parser included in express. If a file was included with a multipart
 request, a temporary path to the uploaded file is provided in `req.body`.
 
+Parted now tries to use [qs](https://github.com/visionmedia/node-querystring) as
+an optional dependency, but it can function without it. Using `qs` makes it a
+proper replacement for the connect/express body parser, as it can parse nested
+querystrings.
+
 ## Install
 
 ``` bash
@@ -17,9 +22,6 @@ $ npm install parted
 ```
 
 ## As a middleware
-
-(__NOTE:__ Limit options have been slightly changed for v0.0.6. Refer to the
-example below.)
 
 ``` js
 var parted = require('parted');
@@ -47,7 +49,7 @@ for a given name, for example:
 However when `multiple` is enabled, this _may_ be an array:
 
 ```js
-{ images: 
+{ images:
    [ '/tmp/bigred-pau.1319577761529.png',
      '/tmp/bigred-ico.1319577761528.png',
      '/tmp/bigred-rec.1319577761529.png',
@@ -93,5 +95,5 @@ req.pipe(parser);
 
 ## Running tests
 
-  $ node test
+    $ node test
 
