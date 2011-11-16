@@ -10,7 +10,7 @@ var express = require('express')
 
 var app = express.createServer();
 
-var handle = parted({ path: __dirname + '/' });
+var handle = parted({ path: __dirname + '/', stream: true });
 
 /*app.use('/json', function(req, res, next) {
   handle(req, res, function(err) {
