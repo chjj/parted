@@ -9,11 +9,14 @@ one of them.
 The middleware will leave you with a `req.body` object, similar to the default
 body parser included in express. If a file was included with a multipart
 request, a temporary path to the uploaded file is provided in `req.body`.
+The multipart parser will also create a `req.files` object specifically for
+files if you prefer.
 
-Parted now tries to use [qs](https://github.com/visionmedia/node-querystring) as
-an optional dependency, but it can function without it. Using `qs` makes it a
-proper replacement for the connect/express body parser, as it can parse nested
-querystrings.
+Every parser handles nested fields in the same way `node-querystring` does.
+
+*Note;* Although the JSON and qs/encoded parsers are streaming, they're disabled
+by default and buffering parsers are used instead. Use the `stream` option to
+enable them.
 
 ## Install
 
@@ -33,9 +36,8 @@ app.use(parted({
   limit: 30 * 1024,
   // disk usage limit per request
   diskLimit: 30 * 1024 * 1024,
-  // allow multiple parts of the same name,
-  // then available as an array
-  multiple: true
+  // enable streaming for json/qs
+  stream: true
 }));
 ```
 
