@@ -118,102 +118,133 @@ var multiple = function(file, func) {
 };
 
 var main = function(argv) {
-  if (!argv.length || ~argv.indexOf('--multipart')) {
-    multiple('chrome', function() {
-      multiple('opera', function() {
-        multiple('firefox', function() {
-          console.log('DONE');
-          if (!argv.length) json(), encoded();
+  multiple('chrome', function() {
+    multiple('opera', function() {
+      multiple('firefox', function() {
+        console.log('DONE - multipart');
+        json(true, function() {
+          encoded(true, function() {
+            json(false);
+            encoded(false);
+          });
         });
       });
     });
-  }
-
-  if (~argv.indexOf('--json')) {
-    json();
-  }
-
-  if (~argv.indexOf('--encoded')) {
-    encoded();
-  }
+  });
 };
 
-var json = function() {
-  var assert = require('assert');
-  var TEST_JSON = '{"a":{"b":100,"c":[2,3]},"d":["e"],"f":true}';
-  var Parser = require('../lib/json');
+// create a mock request
+var _request = function(type) {
+  var req = new (require('stream').Stream)();
 
-  var parser = new Parser();
-
-  parser.on('end', function(obj) {
-    console.log(obj);
-    assert.deepEqual(obj, JSON.parse(TEST_JSON), 'Not deep equal.');
-    assert.equal(JSON.stringify(obj), TEST_JSON, 'Not equal.');
-    console.log('Completed.');
-  });
-
-  var emit = parser.emit;
-  parser.emit = function(type, val) {
-    console.log(type, val);
-    return emit.apply(this, arguments);
+  req.headers = {
+    'content-type': type
   };
 
-  parser.write(TEST_JSON.slice(0, 25));
-  parser.write(TEST_JSON.slice(25));
-  parser.end();
+  req.destroy = function() {
+    return this;
+  };
 
-  /*
-  (function emit(a, b) {
-    parser.emit(a, b);
-    return emit;
-  })
-  ('object start')
-  ('object key', 'hello')
-  ('object start')
-  ('object key', 'world')
-  ('number', 100)
-  ('object key', 'test')
-  ('array start')
-  ('number', 2)
-  ('number', 3)
-  ('array end')
-  ('object end')
-  ('object key', 'hi')
-  ('array start')
-  ('string', 'an array!')
-  ('array end')
-  ('object end')
-  ('end', parser.data);
-  */
+  return req;
 };
 
-var encoded = function() {
-  var assert = require('assert')
-    , qs = require('querystring')
-    , obj = {}
-    , Parser = require('../lib/encoded');
+var json = function(stream, func) {
+  var t_json =
+  { a: { b: 100, c: [ 2, 3 ] }, d: [ 'e' ], f: true };
 
-  var TEST_ENCODED = 'a=1&b=2&c=3&d=hello%20world&e=hi%20world&f=testing';
+  var req = _request('application/json');
 
-  var parser = new Parser();
+  var m = parted({ stream: stream });
 
-  parser.on('value', function(key, value) {
-    console.log(key, value);
-    obj[key] = value;
-  });
+  m(req, {}, function(err) {
+    if (err) throw err;
 
-  parser.on('end', function() {
+    var obj = req.body;
     console.log(obj);
-    assert.deepEqual(obj, qs.parse(TEST_ENCODED), 'Not deep equal.'
-      + require('util').inspect(qs.parse(TEST_ENCODED)));
-    assert.equal(qs.stringify(obj), TEST_ENCODED, 'Not equal.'
-      + qs.stringify(obj));
-    console.log('Completed.');
+    assert.deepEqual(obj, t_json, 'Not deep equal.');
+    assert.equal(JSON.stringify(obj), JSON.stringify(t_json), 'Not equal.');
+
+    console.log('Completed ' + (stream ? ' streaming ' : '') + 'json.');
+    if (stream) func();
   });
 
-  parser.write(new Buffer(TEST_ENCODED.slice(0, 25), 'utf8'));
-  parser.write(new Buffer(TEST_ENCODED.slice(25), 'utf8'));
-  parser.end();
+  req.emit('data', JSON.stringify(t_json).slice(0, 25));
+  req.emit('data', JSON.stringify(t_json).slice(25));
+  req.emit('end');
 };
+
+var encoded = function(stream, func) {
+  var t_encoded =
+  { a: '1',
+    b: '2',
+    c: '3',
+    d: 'hello world',
+    e: 'hi world',
+    f: 'testing' };
+
+  var req = _request('application/x-www-form-urlencoded');
+
+  var m = parted({ stream: stream });
+
+  m(req, {}, function(err) {
+    if (err) throw err;
+
+    var obj = req.body;
+    console.log(obj);
+    assert.deepEqual(obj, t_encoded, 'Not deep equal.'
+      + require('util').inspect(t_encoded));
+    assert.equal(stringify(obj), stringify(t_encoded), 'Not equal.'
+      + stringify(obj));
+
+    console.log('Completed ' + (stream ? ' streaming ' : '') + 'encoded.');
+    if (stream) func();
+  });
+
+  req.emit('data', new Buffer(stringify(t_encoded).slice(0, 25), 'utf8'));
+  req.emit('data', new Buffer(stringify(t_encoded).slice(25), 'utf8'));
+  req.emit('end')
+};
+
+// from node-querystring
+var stringify = (function() {
+  function stringifyString(str, prefix) {
+    if (!prefix) throw new TypeError('stringify expects an object');
+    return prefix + '=' + encodeURIComponent(str);
+  }
+
+  function stringifyArray(arr, prefix) {
+    var ret = [];
+    if (!prefix) throw new TypeError('stringify expects an object');
+    for (var i = 0; i < arr.length; i++) {
+      ret.push(stringify(arr[i], prefix + '[]'));
+    }
+    return ret.join('&');
+  }
+
+  function stringifyObject(obj, prefix) {
+    var ret = []
+      , keys = Object.keys(obj)
+      , key;
+    for (var i = 0, len = keys.length; i < len; ++i) {
+      key = keys[i];
+      ret.push(stringify(obj[key], prefix
+        ? prefix + '[' + encodeURIComponent(key) + ']'
+        : encodeURIComponent(key)));
+    }
+    return ret.join('&');
+  }
+
+  return function(obj, prefix) {
+    if (Array.isArray(obj)) {
+      return stringifyArray(obj, prefix);
+    } else if ('[object Object]' == toString.call(obj)) {
+      return stringifyObject(obj, prefix);
+    } else if ('string' == typeof obj) {
+      return stringifyString(obj, prefix);
+    } else {
+      return prefix;
+    }
+  };
+})();
 
 main(process.argv.slice(2));
