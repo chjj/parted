@@ -19,14 +19,17 @@ parted.multipart.root = files;
 // create a mock request
 var request = function(size, file) {
   file = __dirname + '/' + file + '.part';
+
   var stream = fs.createReadStream(file, {
     bufferSize: size
   });
+
   var boundary = fs
     .readFileSync(file)
     .toString('utf8')
     .match(/--[^\r\n]+/)[0]
     .slice(2);
+
   return {
     headers: {
       'content-type': 'multipart/form-data; boundary="' + boundary + '"'
@@ -133,6 +136,14 @@ var main = function(argv) {
   });
 };
 
+var util = require('util');
+
+var inspect = function() {
+  return Array.prototype.slice.call(arguments).map(function(arg) {
+    return util.inspect(arg);
+  }).join('\n');
+};
+
 // create a mock request
 var _request = function(type) {
   var req = new (require('stream').Stream)();
@@ -150,7 +161,11 @@ var _request = function(type) {
 
 var json = function(stream, func) {
   var t_json =
-  { a: { b: 100, c: [ 2, 3 ] }, d: [ 'e' ], f: true };
+  { a: { b: 100, c: [ 2, 3 ] }, d: [ 'e' ],
+    f: true, g: null, h: false, i: 1.9,
+    j: -1.0, k: false, l: 'hello' };
+
+  var st_json = JSON.stringify(t_json);
 
   var req = _request('application/json');
 
@@ -162,14 +177,15 @@ var json = function(stream, func) {
     var obj = req.body;
     console.log(obj);
     assert.deepEqual(obj, t_json, 'Not deep equal.');
-    assert.equal(JSON.stringify(obj), JSON.stringify(t_json), 'Not equal.');
+    assert.equal(JSON.stringify(obj), st_json, 'Not equal.');
 
     console.log('Completed ' + (stream ? ' streaming ' : '') + 'json.');
     if (stream) func();
   });
 
-  req.emit('data', JSON.stringify(t_json).slice(0, 25));
-  req.emit('data', JSON.stringify(t_json).slice(25));
+  var half = st_json.length / 2 << 0;
+  req.emit('data', new Buffer(st_json.slice(0, half), 'utf8'));
+  req.emit('data', new Buffer(st_json.slice(half), 'utf8'));
   req.emit('end');
 };
 
@@ -180,7 +196,12 @@ var encoded = function(stream, func) {
     c: '3',
     d: 'hello world',
     e: 'hi world',
-    f: 'testing' };
+    f: 'testing',
+    g: [ '1', '2', 'asd' ],
+    h: { i: 'asdgret34' }
+  };
+
+  var st_encoded = stringify(t_encoded);
 
   var req = _request('application/x-www-form-urlencoded');
 
@@ -191,17 +212,20 @@ var encoded = function(stream, func) {
 
     var obj = req.body;
     console.log(obj);
-    assert.deepEqual(obj, t_encoded, 'Not deep equal.'
-      + require('util').inspect(t_encoded));
-    assert.equal(stringify(obj), stringify(t_encoded), 'Not equal.'
+    assert.deepEqual(obj, t_encoded, 'Not deep equal. '
+      + inspect(obj, t_encoded, st_encoded));
+    assert.equal(stringify(obj), st_encoded, 'Not equal. '
       + stringify(obj));
 
-    console.log('Completed ' + (stream ? ' streaming ' : '') + 'encoded.');
+    console.log('Completed '
+      + (stream ? ' streaming ' : '') + 'encoded.');
+
     if (stream) func();
   });
 
-  req.emit('data', new Buffer(stringify(t_encoded).slice(0, 25), 'utf8'));
-  req.emit('data', new Buffer(stringify(t_encoded).slice(25), 'utf8'));
+  var half = st_encoded.length / 2 << 0;
+  req.emit('data', new Buffer(st_encoded.slice(0, half), 'utf8'));
+  req.emit('data', new Buffer(st_encoded.slice(half), 'utf8'));
   req.emit('end')
 };
 
