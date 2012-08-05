@@ -1,4 +1,5 @@
 var parted = require('../')
+  , qs = parted.qs
   , assert = require('assert')
   , fs = require('fs')
   , path = require('path');
@@ -201,7 +202,12 @@ var encoded = function(stream, func) {
     h: { i: 'asdgret34' }
   };
 
-  var st_encoded = stringify(t_encoded);
+  var st_encoded_ = 'a=1&b=2&c=3&d=hello+world&e=hi+world'
+    + '&f=testing&g[]=1&g[]=2&g[]=asd&h[i]=asdgret34';
+
+  var st_encoded = qs.stringify(t_encoded);
+
+  assert.equal(st_encoded, st_encoded_);
 
   var req = _request('application/x-www-form-urlencoded');
 
@@ -214,8 +220,8 @@ var encoded = function(stream, func) {
     console.log(obj);
     assert.deepEqual(obj, t_encoded, 'Not deep equal. '
       + inspect(obj, t_encoded, st_encoded));
-    assert.equal(stringify(obj), st_encoded, 'Not equal. '
-      + stringify(obj));
+    assert.equal(qs.stringify(obj), st_encoded, 'Not equal. '
+      + qs.stringify(obj));
 
     console.log('Completed '
       + (stream ? ' streaming ' : '') + 'encoded.');
@@ -228,47 +234,5 @@ var encoded = function(stream, func) {
   req.emit('data', new Buffer(st_encoded.slice(half), 'utf8'));
   req.emit('end')
 };
-
-// from node-querystring
-var stringify = (function() {
-  function stringifyString(str, prefix) {
-    if (!prefix) throw new TypeError('stringify expects an object');
-    return prefix + '=' + encodeURIComponent(str);
-  }
-
-  function stringifyArray(arr, prefix) {
-    var ret = [];
-    if (!prefix) throw new TypeError('stringify expects an object');
-    for (var i = 0; i < arr.length; i++) {
-      ret.push(stringify(arr[i], prefix + '[]'));
-    }
-    return ret.join('&');
-  }
-
-  function stringifyObject(obj, prefix) {
-    var ret = []
-      , keys = Object.keys(obj)
-      , key;
-    for (var i = 0, len = keys.length; i < len; ++i) {
-      key = keys[i];
-      ret.push(stringify(obj[key], prefix
-        ? prefix + '[' + encodeURIComponent(key) + ']'
-        : encodeURIComponent(key)));
-    }
-    return ret.join('&');
-  }
-
-  return function(obj, prefix) {
-    if (Array.isArray(obj)) {
-      return stringifyArray(obj, prefix);
-    } else if ('[object Object]' == toString.call(obj)) {
-      return stringifyObject(obj, prefix);
-    } else if ('string' == typeof obj) {
-      return stringifyString(obj, prefix);
-    } else {
-      return prefix;
-    }
-  };
-})();
 
 main(process.argv.slice(2));
