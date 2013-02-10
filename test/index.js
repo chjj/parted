@@ -127,9 +127,11 @@ var main = function(argv) {
       multiple('firefox', function() {
         console.log('DONE - multipart');
         json(true, function() {
-          encoded(true, function() {
-            json(false);
-            encoded(false);
+          djson(function() {
+            encoded(true, function() {
+              json(false);
+              encoded(false);
+            });
           });
         });
       });
@@ -187,6 +189,49 @@ var json = function(stream, func) {
   var half = st_json.length / 2 << 0;
   req.emit('data', new Buffer(st_json.slice(0, half), 'utf8'));
   req.emit('data', new Buffer(st_json.slice(half), 'utf8'));
+  req.emit('end');
+};
+
+var djson = function(func) {
+  var t_json =
+  { a: { b: 100, c: [ 2, 3 ] }, d: [ 'e' ],
+    f: true, g: null, h: false, i: 1.9,
+    j: -1.0, k: false, l: 'hello' };
+
+  var st_json = JSON.stringify(t_json);
+
+  st_json += '\n' + st_json;
+  st_json += '\n3\n{}';
+
+  var req = _request('application/json');
+
+  var m = parted({ stream: true, noMultiple: false });
+
+  m(req, {}, function(err) {
+    if (err) throw err;
+
+    var obj = req.body;
+    console.log(obj);
+    assert.equal(obj.length, 4);
+
+    obj.slice(0, 2).forEach(function(obj) {
+      assert.deepEqual(obj, t_json, 'Not deep equal.');
+      assert.equal(JSON.stringify(obj), st_json.split('\n')[0], 'Not equal.');
+    });
+
+    assert.equal(obj[2], 3);
+
+    assert.deepEqual(obj[3], {});
+    assert.equal(JSON.stringify(obj[3]), '{}');
+
+    console.log('Completed double streaming json.');
+    func();
+  });
+
+  var third = st_json.length / 3 | 0;
+  req.emit('data', new Buffer(st_json.slice(0, third), 'utf8'));
+  req.emit('data', new Buffer(st_json.slice(third, third * 2), 'utf8'));
+  req.emit('data', new Buffer(st_json.slice(third * 2), 'utf8'));
   req.emit('end');
 };
 
