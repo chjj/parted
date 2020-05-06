@@ -5,7 +5,8 @@ var parted = require('../')
   , path = require('path');
 
 var files = path.normalize(__dirname + '/tmp')
-  , image = fs.readFileSync(__dirname + '/top.png');
+  , image = fs.readFileSync(__dirname + '/top.png')
+  , utf_image = fs.readFileSync(__dirname + '/トップ.png');
 
 try {
   fs.readdirSync(files).forEach(function(f) {
@@ -53,14 +54,29 @@ var request = function(size, file) {
   };
 };
 
-var handle = parted.multipart.middleware();
+var handle = parted.multipart.middleware({encoding: 'utf-8'});
 
 var expect_text = {
   chrome: 'world...oh look the end'
               + ' of the part: \r\n------WebKi-just kidding',
   opera: 'oh look the end of the part:\r\n--',
-  firefox: 'oh look the end of the part:\r\n--'
+  firefox: 'oh look the end of the part:\r\n--',
+  utf: 'world...oh look the end of the part:'
 };
+
+var expect_image = {
+  chrome: image,
+  opera: image,
+  firefox: image,
+  utf: utf_image,
+}
+
+var expect_filename = {
+  chrome: 'top',
+  opera: 'top',
+  firefox: 'top',
+  utf: 'トップ',
+}
 
 var message = function(size, file, func) {
   var req = request(size, file)
@@ -85,7 +101,7 @@ var message = function(size, file, func) {
               'Bad text. Got: ' + parts.hello);
 
     var got = fs.readFileSync(parts.content)
-      , expect = image
+      , expect = expect_image[file]
       , i = 0
       , len = expect.length;
 
@@ -95,6 +111,12 @@ var message = function(size, file, func) {
       + '. Got: ' + got.length + '.'
     );
 
+    assert.ok(parts.content.includes(expect_filename[file]),
+      'Bad file name. Got: ' 
+      + ' Expected to include: ' + expect_filename[file]
+      + '. Got: ' + parts.content + '.'
+
+    )
     for (; i < len; i++) {
       assert.ok(got[i] === expect[i], 'Diff failure.');
     }
@@ -125,12 +147,14 @@ var main = function(argv) {
   multiple('chrome', function() {
     multiple('opera', function() {
       multiple('firefox', function() {
-        console.log('DONE - multipart');
-        json(true, function() {
-          djson(function() {
-            encoded(true, function() {
-              json(false);
-              encoded(false);
+        multiple('utf', function() {
+          console.log('DONE - multipart');
+          json(true, function() {
+            djson(function() {
+              encoded(true, function() {
+                json(false);
+                encoded(false);
+              });
             });
           });
         });

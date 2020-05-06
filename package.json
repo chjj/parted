@@ -6,5 +6,10 @@
   "main": "./index.js",
   "repository": "git://github.com/chjj/parted.git",
   "keywords": [ "multipart", "parser", "http", "express", "middleware" ],
-  "tags": [ "multipart", "parser", "http", "express", "middleware" ]
+  "tags": [ "multipart", "parser", "http", "express", "middleware" ],
+  "scripts": {
+    "pretest": "rm -rf test/tmp",
+    "test": "node test",
+    "test:debug": "node --inspect test"
+  }
 }
