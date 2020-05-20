@@ -6,7 +6,8 @@ var parted = require('../')
 
 var files = path.normalize(__dirname + '/tmp')
   , image = fs.readFileSync(__dirname + '/top.png')
-  , utf_image = fs.readFileSync(__dirname + '/トップ.png');
+  , utf_image = fs.readFileSync(__dirname + '/トップ.png')
+  , single_quote_image = fs.readFileSync(__dirname + '/to"p.png')
 
 try {
   fs.readdirSync(files).forEach(function(f) {
@@ -61,7 +62,8 @@ var expect_text = {
               + ' of the part: \r\n------WebKi-just kidding',
   opera: 'oh look the end of the part:\r\n--',
   firefox: 'oh look the end of the part:\r\n--',
-  utf: 'world...oh look the end of the part:'
+  utf: 'world...oh look the end of the part:',
+  single_quote: 'oh look the end of the part:'
 };
 
 var expect_image = {
@@ -69,6 +71,7 @@ var expect_image = {
   opera: image,
   firefox: image,
   utf: utf_image,
+  single_quote: single_quote_image,
 }
 
 var expect_filename = {
@@ -76,6 +79,7 @@ var expect_filename = {
   opera: 'top',
   firefox: 'top',
   utf: 'トップ',
+  single_quote: 'to"p',
 }
 
 var message = function(size, file, func) {
@@ -145,21 +149,21 @@ var multiple = function(file, func) {
 
 var main = function(argv) {
   multiple('chrome', function() {
-    multiple('opera', function() {
       multiple('firefox', function() {
         multiple('utf', function() {
-          console.log('DONE - multipart');
-          json(true, function() {
-            djson(function() {
-              encoded(true, function() {
-                json(false);
-                encoded(false);
+          multiple('single_quote', function() {
+            console.log('DONE - multipart');
+            json(true, function() {
+              djson(function() {
+                encoded(true, function() {
+                  json(false);
+                  encoded(false);
+                });
               });
             });
           });
         });
       });
-    });
   });
 };
 
